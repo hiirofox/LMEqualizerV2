@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LMEqualizerV2 - Standalone Plugin", "LMEqualizerV2_StandalonePlugin.vcxproj", "{CCFE2F19-9155-B733-44EE-642B9BA54585}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614} = {2B76EF3F-6A8D-2256-62A4-73C2E755B614}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LMEqualizerV2 - VST3", "LMEqualizerV2_VST3.vcxproj", "{2E5CB8CD-EF40-76EA-6BF7-DE5F910B9E8E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614} = {2B76EF3F-6A8D-2256-62A4-73C2E755B614}
+		{B34EB671-D947-D3D7-DB39-172806C08766} = {B34EB671-D947-D3D7-DB39-172806C08766}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LMEqualizerV2 - Shared Code", "LMEqualizerV2_SharedCode.vcxproj", "{2B76EF3F-6A8D-2256-62A4-73C2E755B614}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LMEqualizerV2 - VST3 Manifest Helper", "LMEqualizerV2_VST3ManifestHelper.vcxproj", "{B34EB671-D947-D3D7-DB39-172806C08766}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E5CB8CD-EF40-76EA-6BF7-DE5F910B9E8E}.Debug|x64.ActiveCfg = Debug|x64
+		{2E5CB8CD-EF40-76EA-6BF7-DE5F910B9E8E}.Debug|x64.Build.0 = Debug|x64
+		{2E5CB8CD-EF40-76EA-6BF7-DE5F910B9E8E}.Release|x64.ActiveCfg = Release|x64
+		{2E5CB8CD-EF40-76EA-6BF7-DE5F910B9E8E}.Release|x64.Build.0 = Release|x64
+		{CCFE2F19-9155-B733-44EE-642B9BA54585}.Debug|x64.ActiveCfg = Debug|x64
+		{CCFE2F19-9155-B733-44EE-642B9BA54585}.Debug|x64.Build.0 = Debug|x64
+		{CCFE2F19-9155-B733-44EE-642B9BA54585}.Release|x64.ActiveCfg = Release|x64
+		{CCFE2F19-9155-B733-44EE-642B9BA54585}.Release|x64.Build.0 = Release|x64
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614}.Debug|x64.ActiveCfg = Debug|x64
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614}.Debug|x64.Build.0 = Debug|x64
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614}.Release|x64.ActiveCfg = Release|x64
+		{2B76EF3F-6A8D-2256-62A4-73C2E755B614}.Release|x64.Build.0 = Release|x64
+		{B34EB671-D947-D3D7-DB39-172806C08766}.Debug|x64.ActiveCfg = Debug|x64
+		{B34EB671-D947-D3D7-DB39-172806C08766}.Debug|x64.Build.0 = Debug|x64
+		{B34EB671-D947-D3D7-DB39-172806C08766}.Release|x64.ActiveCfg = Release|x64
+		{B34EB671-D947-D3D7-DB39-172806C08766}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

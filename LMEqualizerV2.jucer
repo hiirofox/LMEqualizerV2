@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="qjzudO" name="LMEqualizerV2" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+  <MAINGROUP id="b78WEJ" name="LMEqualizerV2">
+    <GROUP id="{C77562AF-860C-1C34-84B5-B39EFAD7C990}" name="Source">
+      <GROUP id="{4E8F23BF-EE1E-6B09-C0A7-B858A9FCD8DE}" name="dsp">
+        <FILE id="q4LaaR" name="biquad.h" compile="0" resource="0" file="Source/dsp/biquad.h"/>
+        <FILE id="J2BwuL" name="equalizer.h" compile="0" resource="0" file="Source/dsp/equalizer.h"/>
+        <FILE id="j7LxMm" name="fft.cpp" compile="1" resource="0" file="Source/dsp/fft.cpp"/>
+        <FILE id="yPSriX" name="fft.h" compile="0" resource="0" file="Source/dsp/fft.h"/>
+        <FILE id="S2iMmE" name="svf.h" compile="0" resource="0" file="Source/dsp/svf.h"/>
+      </GROUP>
+      <GROUP id="{A1C3DC3C-3D06-513A-DF2C-74C97847BD25}" name="ui">
+        <FILE id="ZDrE9E" name="LM_slider.cpp" compile="1" resource="0" file="Source/ui/LM_slider.cpp"/>
+        <FILE id="F2ZVI0" name="LM_slider.h" compile="0" resource="0" file="Source/ui/LM_slider.h"/>
+        <FILE id="lMizat" name="menuTable.cpp" compile="1" resource="0" file="Source/ui/menuTable.cpp"/>
+        <FILE id="Evdzfo" name="menuTable.h" compile="0" resource="0" file="Source/ui/menuTable.h"/>
+        <FILE id="ZHXQ5K" name="specturmUI.h" compile="0" resource="0" file="Source/ui/specturmUI.h"/>
+      </GROUP>
+      <FILE id="BSuJnD" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="Arx0ZK" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="DROATj" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="rsLwdA" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="LMEqualizerV2"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="LMEqualizerV2"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="C:/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="C:/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
