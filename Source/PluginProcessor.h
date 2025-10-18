@@ -9,9 +9,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "dsp/magnitudelay.h"
-#include "dsp/EnveFunc.h"
-#include "dsp/specWaterFall.h"
+#include "dsp/equalizer.h"
+
 //==============================================================================
 /**
 */
@@ -63,15 +62,14 @@ public:
 		return Params;
 	}
 
-	EnveFunc enveFunc1;
-	EnveFunc enveFunc2;
-	SpecWaterFall swf;
+	Equalizer eq;
 
 private:
 	//Synth Param
 	static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 	juce::AudioProcessorValueTreeState Params{ *this, nullptr, "Parameters", createParameterLayout() };
-	Magnitudelay stftl{ &enveFunc1,&enveFunc2 }, stftr{ &enveFunc1,&enveFunc2 };
+
+
 	//==============================================================================
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LModelAudioProcessor)
 };

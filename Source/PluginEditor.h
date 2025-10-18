@@ -11,9 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "ui/LM_slider.h"
-#include "ui/EnveUI.h"
-#include "ui/specWaterFallUI.h"
-#include "ui/menuTable.h"
+#include "ui/equalizerUI.h"
 
 //==============================================================================
 /**
@@ -33,14 +31,8 @@ private:
 	// This reference is provided as a quick way for your editor to
 	// access the processor object that created it.
 	LModelAudioProcessor& audioProcessor;
-	LMKnob K_LT, K_RT, K_FB, K_POW;
-	LMKnob K_LPM, K_DRY;
-	EnveUI enveUI1{ &audioProcessor.enveFunc1 };
-	EnveUI enveUI2{ &audioProcessor.enveFunc2 };
-
-	SpecWaterFallUI swfUI{ audioProcessor.swf };
 	
-	MenuTable menutable;
+	EqualizerUI equi;
 
 	juce::ComponentBoundsConstrainer constrainer;  // 用于设置宽高比例
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LModelAudioProcessorEditor)

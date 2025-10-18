@@ -146,7 +146,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\Source\dsp\fft.cpp"/>
     <ClCompile Include="..\..\Source\ui\LM_slider.cpp"/>
-    <ClCompile Include="..\..\Source\ui\menuTable.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="C:\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
@@ -2839,8 +2838,8 @@
     <ClInclude Include="..\..\Source\dsp\fft.h"/>
     <ClInclude Include="..\..\Source\dsp\svf.h"/>
     <ClInclude Include="..\..\Source\ui\LM_slider.h"/>
-    <ClInclude Include="..\..\Source\ui\menuTable.h"/>
     <ClInclude Include="..\..\Source\ui\specturmUI.h"/>
+    <ClInclude Include="..\..\Source\ui\equalizerUI.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
     <ClInclude Include="C:\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>

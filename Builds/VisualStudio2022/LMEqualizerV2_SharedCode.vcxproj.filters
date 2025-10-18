@@ -682,9 +682,6 @@
     <ClCompile Include="..\..\Source\ui\LM_slider.cpp">
       <Filter>LMEqualizerV2\Source\ui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\ui\menuTable.cpp">
-      <Filter>LMEqualizerV2\Source\ui</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
       <Filter>LMEqualizerV2\Source</Filter>
     </ClCompile>
@@ -3561,10 +3558,10 @@
     <ClInclude Include="..\..\Source\ui\LM_slider.h">
       <Filter>LMEqualizerV2\Source\ui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\ui\menuTable.h">
+    <ClInclude Include="..\..\Source\ui\specturmUI.h">
       <Filter>LMEqualizerV2\Source\ui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\ui\specturmUI.h">
+    <ClInclude Include="..\..\Source\ui\equalizerUI.h">
       <Filter>LMEqualizerV2\Source\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">

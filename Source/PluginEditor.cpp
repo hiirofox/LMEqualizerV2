@@ -11,7 +11,7 @@
 
 //==============================================================================
 LModelAudioProcessorEditor::LModelAudioProcessorEditor(LModelAudioProcessor& p)
-	: AudioProcessorEditor(&p), audioProcessor(p)
+	: AudioProcessorEditor(&p), audioProcessor(p), equi(p.eq)
 {
 	// Make sure that before the constructor has finished, you've set the
 	// editor's size to whatever you need it to be.
@@ -26,32 +26,8 @@ LModelAudioProcessorEditor::LModelAudioProcessorEditor(LModelAudioProcessor& p)
 	//constrainer.setFixedAspectRatio(11.0 / 4.0);  // 设置为16:9比例
 	//setConstrainer(&constrainer);  // 绑定窗口的宽高限制
 
-	K_LT.setText("minT", "");
-	K_LT.ParamLink(audioProcessor.GetParams(), "lt");
-	addAndMakeVisible(K_LT);
-	K_RT.setText("maxT", "");
-	K_RT.ParamLink(audioProcessor.GetParams(), "rt");
-	addAndMakeVisible(K_RT);
-	K_FB.setText("feedback", "");
-	K_FB.ParamLink(audioProcessor.GetParams(), "fb");
-	addAndMakeVisible(K_FB);
-	K_POW.setText("pow", "");
-	K_POW.ParamLink(audioProcessor.GetParams(), "pow");
-	addAndMakeVisible(K_POW);
-	K_LPM.setText("smooth", "");
-	K_LPM.ParamLink(audioProcessor.GetParams(), "lpm");
-	addAndMakeVisible(K_LPM);
-	K_DRY.setText("dry", "");
-	K_DRY.ParamLink(audioProcessor.GetParams(), "dry");
-	addAndMakeVisible(K_DRY);
+	addAndMakeVisible(equi);
 
-
-	//addAndMakeVisible(swfUI);
-	//addAndMakeVisible(enveUI1);
-	menutable.addMenuAndComponent("Delay", &enveUI1, &swfUI);
-	menutable.addMenuAndComponent("Gain", &enveUI2, &swfUI);
-
-	addAndMakeVisible(menutable);
 	startTimerHz(30);
 
 }
@@ -71,7 +47,7 @@ void LModelAudioProcessorEditor::paint(juce::Graphics& g)
 
 	int w = getBounds().getWidth(), h = getBounds().getHeight();
 
-	g.drawText("L-MODEL Magnitudelay", juce::Rectangle<float>(32, 16, w, 16), 1);
+	//g.drawText("L-MODEL Magnitudelay", juce::Rectangle<float>(32, 16, w, 16), 1);
 }
 
 void LModelAudioProcessorEditor::resized()
@@ -80,16 +56,7 @@ void LModelAudioProcessorEditor::resized()
 	int x = bound.getX(), y = bound.getY(), w = bound.getWidth(), h = bound.getHeight();
 	auto convXY = juce::Rectangle<int>::leftTopRightBottom;
 
-	//swfUI.setBounds(32, 32, w - 64, h - 64 - 64 - 24);
-	//enveUI1.setBounds(32, 32, w - 64, h - 64 - 64 - 24);
-	menutable.setBounds(32, 32, w - 64, h - 64 - 64 - 24);
-
-	K_LT.setBounds(32 + 64 * 0, h - 32 - 64, 64, 64);
-	K_RT.setBounds(32 + 64 * 1, h - 32 - 64, 64, 64);
-	K_FB.setBounds(32 + 64 * 2, h - 32 - 64, 64, 64);
-	K_POW.setBounds(32 + 64 * 3, h - 32 - 64, 64, 64);
-	K_LPM.setBounds(32 + 64 * 4, h - 32 - 64, 64, 64);
-	K_DRY.setBounds(32 + 64 * 5, h - 32 - 64, 64, 64);
+	equi.setBounds(32, 32, w - 64, h - 64);
 }
 
 void LModelAudioProcessorEditor::timerCallback()
