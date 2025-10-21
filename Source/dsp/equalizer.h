@@ -12,6 +12,7 @@ enum FilterMode {
 	MODE_PEAKING,
 	MODE_LOWSHELF,
 	MODE_HIGHSHELF,
+	MODE_TILT
 };
 
 struct FilterNode {
@@ -66,6 +67,8 @@ private:
 			return designer.DesignLowshelf(cutoff, q, gainDB);
 		case MODE_HIGHSHELF:
 			return designer.DesignHighshelf(cutoff, q, gainDB);
+		case MODE_TILT:
+			return designer.DesignTilt(cutoff, q, gainDB);
 		default:
 			return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 		}
@@ -274,14 +277,14 @@ public:
 	static const char* GetFilterModeName(int mode) {
 		static const char* names[] = {
 			"Low Pass", "High Pass", "Band Pass",
-			"Peaking", "Low Shelf", "High Shelf"
+			"Peaking", "Low Shelf", "High Shelf","Flat Tilt"
 		};
-		if (mode >= 0 && mode < 6) return names[mode];
+		if (mode >= 0 && mode < 7) return names[mode];
 		return "Unknown";
 	}
 
 	// 获取可用的滤波器模式数量
-	static int GetNumFilterModes() { return 6; }
+	static int GetNumFilterModes() { return 7; }
 
 
 

@@ -48,19 +48,19 @@ struct BiquadCoeffs
 		this->a2 = a2s[0];
 		for (int i = 1; i < numStages; ++i)
 		{
-			this->b0s[i] = b0s[i];
-			this->b1s[i] = b1s[i];
-			this->b2s[i] = b2s[i];
-			this->a1s[i] = a1s[i];
-			this->a2s[i] = a2s[i];
+			this->b0s[i - 1] = b0s[i];
+			this->b1s[i - 1] = b1s[i];
+			this->b2s[i - 1] = b2s[i];
+			this->a1s[i - 1] = a1s[i];
+			this->a2s[i - 1] = a2s[i];
 		}
-		for (int i = numStages; i < MaxBiquadStages; ++i)
+		for (int i = numStages - 1; i < MaxBiquadStages; ++i)
 		{
-			this->b0s[i] = b0s[i];
-			this->b1s[i] = b1s[i];
-			this->b2s[i] = b2s[i];
-			this->a1s[i] = a1s[i];
-			this->a2s[i] = a2s[i];
+			this->b0s[i] = 0;
+			this->b1s[i] = 0;
+			this->b2s[i] = 0;
+			this->a1s[i] = 0;
+			this->a2s[i] = 0;
 		}
 	}
 };
@@ -228,6 +228,10 @@ public:
 		}
 		coeffs.numStages = numStages;
 		return coeffs;
+	}
+	BiquadCoeffs DesignTilt(float cutoff, float /*Q*/, float gainDB)
+	{
+		return BiquadCoeffs{ 1,0,0,0,0 };
 	}
 
 	BiquadCoeffs DesignPeaking(float cutoff, float Q, float gainDB)
