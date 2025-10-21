@@ -4,11 +4,65 @@
 #include <math.h>
 #include <utility>
 
+#define MaxBiquadStages 12 //最多12+1个Biquad串联
 struct BiquadCoeffs
 {
 	float b0, b1, b2, a1, a2;
-	BiquadCoeffs() : b0(0.0f), b1(0.0f), b2(0.0f), a1(0.0f), a2(0.0f) {}
-	BiquadCoeffs(float b0, float b1, float b2, float a1, float a2) : b0(b0), b1(b1), b2(b2), a1(a1), a2(a2) {}
+	int numStages;
+	float b0s[MaxBiquadStages];
+	float b1s[MaxBiquadStages];
+	float b2s[MaxBiquadStages];
+	float a1s[MaxBiquadStages];
+	float a2s[MaxBiquadStages];
+
+	BiquadCoeffs() : b0(0.0f), b1(0.0f), b2(0.0f), a1(0.0f), a2(0.0f), numStages(0)
+	{
+		memset(b0s, 0, sizeof(b0s));
+		memset(b1s, 0, sizeof(b1s));
+		memset(b2s, 0, sizeof(b2s));
+		memset(a1s, 0, sizeof(a1s));
+		memset(a2s, 0, sizeof(a2s));
+		for (int i = 0; i < MaxBiquadStages; ++i) b0s[i] = 1.0;
+	}
+	BiquadCoeffs(float b0, float b1, float b2, float a1, float a2) : b0(b0), b1(b1), b2(b2), a1(a1), a2(a2), numStages(0)
+	{
+		memset(b0s, 0, sizeof(b0s));
+		memset(b1s, 0, sizeof(b1s));
+		memset(b2s, 0, sizeof(b2s));
+		memset(a1s, 0, sizeof(a1s));
+		memset(a2s, 0, sizeof(a2s));
+		for (int i = 0; i < MaxBiquadStages; ++i) b0s[i] = 1.0;
+	}
+	BiquadCoeffs(const float* b0s,
+		const float* b1s,
+		const float* b2s,
+		const float* a1s,
+		const float* a2s,
+		int numStages)
+	{
+		this->numStages = numStages;
+		this->b0 = b0s[0];
+		this->b1 = b1s[0];
+		this->b2 = b2s[0];
+		this->a1 = a1s[0];
+		this->a2 = a2s[0];
+		for (int i = 1; i < numStages; ++i)
+		{
+			this->b0s[i] = b0s[i];
+			this->b1s[i] = b1s[i];
+			this->b2s[i] = b2s[i];
+			this->a1s[i] = a1s[i];
+			this->a2s[i] = a2s[i];
+		}
+		for (int i = numStages; i < MaxBiquadStages; ++i)
+		{
+			this->b0s[i] = b0s[i];
+			this->b1s[i] = b1s[i];
+			this->b2s[i] = b2s[i];
+			this->a1s[i] = a1s[i];
+			this->a2s[i] = a2s[i];
+		}
+	}
 };
 
 class Biquad
@@ -60,8 +114,20 @@ public:
 
 	// ---------------------------------------------------------------------
 	// Matched biquad low-pass  (Vicanek 2016 Eq. 46-47)
-	BiquadCoeffs DesignLPF(float cutoff, float Q)
+	BiquadCoeffs DesignLPF(float cutoff, float stages, float ctofGainDB)
 	{
+		int numStages = stages / 40.0 * 12.0;
+		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
+		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
+
+		if (ctofGainDB < -6.0)
+		{
+			cutoff *= powf(10.0, (ctofGainDB + 6.0) / 32.0);//经验公式
+			if (cutoff > sampleRate / 2.0) cutoff = sampleRate / 2.0;
+			ctofGainDB = -6.0;
+		}
+		float Q = powf(10.0, ctofGainDB / 20.0);//约-6.0dB以下则不能匹配
+
 		float f0 = cutoff / sampleRate;
 		float a1, a2;
 		computePoles(f0, Q, a1, a2);
@@ -76,12 +142,34 @@ public:
 		float b1 = r0 - b0;
 		float b2 = 0.0f;
 
-		return BiquadCoeffs{ b0, b1, b2, a1, a2 };
+		BiquadCoeffs coeffs(b0, b1, b2, a1, a2);
+		for (int i = 0; i < numStages; ++i)
+		{
+			coeffs.b0s[i] = b0;
+			coeffs.b1s[i] = b1;
+			coeffs.b2s[i] = b2;
+			coeffs.a1s[i] = a1;
+			coeffs.a2s[i] = a2;
+		}
+		coeffs.numStages = numStages;
+		return coeffs;
 	}
 
 	// Matched biquad high-pass  (Vicanek 2016 Eq. 48-49)
-	BiquadCoeffs DesignHPF(float cutoff, float Q)
+	BiquadCoeffs DesignHPF(float cutoff, float stages, float ctofGainDB)
 	{
+		int numStages = stages / 40.0 * 12.0;
+		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
+		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
+
+		if (ctofGainDB < -6.0)
+		{
+			cutoff /= powf(10.0, (ctofGainDB + 6.0) / 32.0);//经验公式
+			if (cutoff > sampleRate / 2.0) cutoff = sampleRate / 2.0;
+			ctofGainDB = -6.0;
+		}
+		float Q = powf(10.0, ctofGainDB / 20.0);
+
 		float f0 = cutoff / sampleRate;
 		float a1, a2;
 		computePoles(f0, Q, a1, a2);
@@ -95,7 +183,51 @@ public:
 		float b1 = -2.0f * b0;
 		float b2 = b0;
 
-		return BiquadCoeffs{ b0, b1, b2, a1, a2 };
+		BiquadCoeffs coeffs(b0, b1, b2, a1, a2);
+		for (int i = 0; i < numStages; ++i)
+		{
+			coeffs.b0s[i] = b0;
+			coeffs.b1s[i] = b1;
+			coeffs.b2s[i] = b2;
+			coeffs.a1s[i] = a1;
+			coeffs.a2s[i] = a2;
+		}
+		coeffs.numStages = numStages;
+		return coeffs;
+	}
+
+	// 带通滤波器
+	BiquadCoeffs DesignBPF(float cutoff, float stages, float ctofGainDB)
+	{
+		int numStages = stages / 40.0 * 12.0;
+		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
+		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
+
+		float Q = powf(10.0, ctofGainDB / 20.0);
+
+		float w0 = 2.0f * M_PI * cutoff / sampleRate;
+		float cosw0 = cosf(w0);
+		float sinw0 = sinf(w0);
+		float alpha = sinw0 / (2.0f * Q);
+
+		float a0 = 1.0f + alpha;
+		float b0 = alpha / a0 * Q;
+		float b1 = 0.0f;
+		float b2 = -alpha / a0 * Q;
+		float a1 = -2.0f * cosw0 / a0;
+		float a2 = (1.0f - alpha) / a0;
+
+		BiquadCoeffs coeffs(b0, b1, b2, a1, a2);
+		for (int i = 0; i < numStages; ++i)
+		{
+			coeffs.b0s[i] = b0;
+			coeffs.b1s[i] = b1;
+			coeffs.b2s[i] = b2;
+			coeffs.a1s[i] = a1;
+			coeffs.a2s[i] = a2;
+		}
+		coeffs.numStages = numStages;
+		return coeffs;
 	}
 
 	BiquadCoeffs DesignPeaking(float cutoff, float Q, float gainDB)
@@ -183,24 +315,6 @@ public:
 			// 如果是增益型，直接使用计算出的系数
 			return BiquadCoeffs(b0_calc, b1_calc, b2_calc, a1_calc, a2_calc);
 		}
-	}
-
-	// 带通滤波器
-	BiquadCoeffs DesignBPF(float cutoff, float Q)
-	{
-		float w0 = 2.0f * M_PI * cutoff / sampleRate;
-		float cosw0 = cosf(w0);
-		float sinw0 = sinf(w0);
-		float alpha = sinw0 / (2.0f * Q);
-
-		float a0 = 1.0f + alpha;
-		float b0 = alpha;
-		float b1 = 0.0f;
-		float b2 = -alpha;
-		float a1 = -2.0f * cosw0;
-		float a2 = 1.0f - alpha;
-
-		return BiquadCoeffs(b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0);
 	}
 
 	// 低频搁架滤波器

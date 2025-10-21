@@ -48,7 +48,7 @@ void LModelAudioProcessorEditor::paint(juce::Graphics& g)
 
 	int w = getBounds().getWidth(), h = getBounds().getHeight();
 
-	//g.drawText("L-MODEL Magnitudelay", juce::Rectangle<float>(32, 16, w, 16), 1);
+	g.drawText("L-MODEL EqualizerV2", juce::Rectangle<float>(32, 16, w, 16), 1);
 }
 
 void LModelAudioProcessorEditor::resized()

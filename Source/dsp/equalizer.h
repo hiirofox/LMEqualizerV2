@@ -11,7 +11,7 @@ enum FilterMode {
 	MODE_BANDPASS,
 	MODE_PEAKING,
 	MODE_LOWSHELF,
-	MODE_HIGHSHELF
+	MODE_HIGHSHELF,
 };
 
 struct FilterNode {
@@ -33,6 +33,12 @@ private:
 		std::complex<double> numerator = (double)coeffs.b0 + (double)coeffs.b1 * z + (double)coeffs.b2 * z2;
 		std::complex<double> denominator = 1.0 + (double)coeffs.a1 * z + (double)coeffs.a2 * z2;
 		auto h = numerator / denominator;
+		for (int i = 0; i < coeffs.numStages; ++i)
+		{
+			numerator = (double)coeffs.b0s[i] + (double)coeffs.b1s[i] * z + (double)coeffs.b2s[i] * z2;
+			denominator = 1.0 + (double)coeffs.a1s[i] * z + (double)coeffs.a2s[i] * z2;
+			h *= numerator / denominator;
+		}
 		return { (float)h.real(),(float)h.imag() };
 	}
 
@@ -49,11 +55,11 @@ private:
 	{
 		switch (mode) {
 		case MODE_LOWPASS:
-			return designer.DesignLPF(cutoff, q);
+			return designer.DesignLPF(cutoff, q, gainDB);
 		case MODE_HIGHPASS:
-			return designer.DesignHPF(cutoff, q);
+			return designer.DesignHPF(cutoff, q, gainDB);
 		case MODE_BANDPASS:
-			return designer.DesignBPF(cutoff, q);
+			return designer.DesignBPF(cutoff, q, gainDB);
 		case MODE_PEAKING:
 			return designer.DesignPeaking(cutoff, q, gainDB);
 		case MODE_LOWSHELF:
