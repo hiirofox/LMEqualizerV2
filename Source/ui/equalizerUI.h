@@ -22,7 +22,7 @@ public:
 	static constexpr juce::uint32 SELECTED_COLOR = 0xff007700;
 	static constexpr juce::uint32 GRID_COLOR = 0xff808080; // 灰色网格
 	static constexpr float Q_WHEEL_SENSITIVITY = 0.1f;
-	static constexpr float MIN_Q = 0.707f;
+	static constexpr float MIN_Q = 0.1f;
 	static constexpr float MAX_Q = 40.0f;
 	// 构造函数
 	EqualizerUI(Equalizer& eq) : equalizer(eq), selectedNodeId(-1), isDragging(false)
@@ -34,9 +34,6 @@ public:
 	{
 		auto bounds = getLocalBounds();
 
-		// 绘制边框
-		g.setColour(juce::Colour(BORDER_COLOR));
-		g.drawRect(bounds.toFloat(), BORDER_WIDTH);
 
 		// 计算内部绘制区域（减去边框）
 		auto innerBounds = bounds.toFloat().reduced(BORDER_WIDTH);
@@ -55,6 +52,10 @@ public:
 
 		// 绘制节点
 		drawNodes(g, innerBounds);
+
+		// 绘制边框
+		g.setColour(juce::Colour(BORDER_COLOR));
+		g.drawRect(bounds.toFloat(), BORDER_WIDTH);
 	}
 	// 鼠标事件处理部分保持不变
 	void mouseDown(const juce::MouseEvent& event) override
@@ -207,34 +208,9 @@ private:
 		// 次要频率刻度 (小刻度)
 		std::vector<float> minorFreqs;
 
-		// 生成小刻度
-		// 50-100Hz: 60, 70, 80, 90
-		for (int i = 6; i <= 9; ++i) {
-			minorFreqs.push_back(i * 10.0f);
-		}
-		// 100-1000Hz: 150, 300, 400, 600, 700, 800, 900
-		std::vector<int> hundreds = { 200, 300, 400, 500, 600, 700, 800, 900 };
-
-		/*
-		// 10-100:
-		for (int freq : hundreds) {
-			minorFreqs.push_back(freq / 10.0f);
-		}
-		// 100-1kHz:
-		for (int freq : hundreds) {
-			minorFreqs.push_back(freq);
-		}
-		// 1k-10kHz:
-		for (int freq : hundreds) {
-			minorFreqs.push_back(freq * 10.0f);
-		}
-		// 10k-20kHz:
-		minorFreqs.push_back(20000);
-		*/
 		for (int i = 2; i <= 9; ++i)
 		{
-			//minorFreqs.push_back(i);
-			//minorFreqs.push_back(i * 10);
+			minorFreqs.push_back(i * 10);
 			minorFreqs.push_back(i * 100);
 			minorFreqs.push_back(i * 1000);
 			minorFreqs.push_back(i * 10000);
@@ -329,6 +305,10 @@ private:
 			return juce::String((int)freq);
 		}
 	}
+	juce::String formatNodeDBLabel(float dB) const
+	{
+		return juce::String(dB, 1) + "dB";
+	}
 	// 绘制频率响应
 	void drawFrequencyResponse(juce::Graphics& g, const juce::Rectangle<float>& bounds)
 	{
@@ -343,7 +323,7 @@ private:
 
 			auto response = equalizer.GetTotalFrequencyResponse(freq);
 			float gainDB = 20.0f * std::log10(std::abs(response));
-			gainDB = juce::jlimit(MIN_DB, MAX_DB, gainDB);
+			//gainDB = juce::jlimit(MIN_DB, MAX_DB, gainDB);
 
 			float y = gainToPosition(gainDB, bounds);
 
@@ -375,7 +355,7 @@ private:
 
 			auto response = equalizer.GetFrequencyResponse(selectedNodeId, freq);
 			float gainDB = 20.0f * std::log10(std::abs(response));
-			gainDB = juce::jlimit(MIN_DB, MAX_DB, gainDB);
+			//gainDB = juce::jlimit(MIN_DB, MAX_DB, gainDB);
 
 			float y = gainToPosition(gainDB, bounds);
 
@@ -426,27 +406,28 @@ private:
 	void drawNodeFrequencyLabel(juce::Graphics& g, const juce::Rectangle<float>& bounds,
 		float nodeX, float nodeY, float freq, float gainDB)
 	{
-		juce::String label = formatNodeFrequencyLabel(freq);
+		juce::String labelf = formatNodeFrequencyLabel(freq);
+		juce::String labeldb = formatNodeDBLabel(gainDB);
 
-		g.setColour(juce::Colours::white);
 
-		float labelY;
+		float labelY1, labelY2;
 		if (gainDB >= 0)
 		{
 			// 在节点上方显示
-			labelY = nodeY - NODE_RADIUS - 20;
+			labelY1 = nodeY - NODE_RADIUS - 20;
+			labelY2 = nodeY - NODE_RADIUS - 20 - 16;
 		}
 		else
 		{
 			// 在节点下方显示
-			labelY = nodeY + NODE_RADIUS + 5;
+			labelY1 = nodeY + NODE_RADIUS + 5;
+			labelY2 = nodeY + NODE_RADIUS + 5 + 16;
 		}
 
-		// 确保标签在bounds内
-		labelY = juce::jlimit(bounds.getY(), bounds.getBottom() - 15, labelY);
-
-		g.drawText(label, nodeX - 25, labelY, 50, 15,
-			juce::Justification::centred);
+		g.setColour(juce::Colour(0xFFFFFFFF).withAlpha(0.75f));
+		g.drawText(labelf, nodeX - 25, labelY1, 50, 15, juce::Justification::centred);
+		g.setColour(juce::Colour(0xFF00FFFF).withAlpha(0.75f));
+		g.drawText(labeldb, nodeX - 25, labelY2, 50, 15, juce::Justification::centred);
 	}
 	// 获取位置处的节点ID
 	int getNodeAtPosition(const juce::Point<float>& pos, const juce::Rectangle<float>& bounds)

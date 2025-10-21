@@ -25,21 +25,16 @@ public:
 
 	void SetBiquadCoeffs(const BiquadCoeffs& bq)
 	{
-		float b1 = bq.a1;
-		float b2 = bq.a2;
-		coeffs.c1 = b1 + 2.0f;
+		coeffs.c1 = bq.a1 + 2.0f;
 		if (coeffs.c1 == 0.0f) return;
-		coeffs.c2 = (1.0f + b1 + b2) / coeffs.c1;
-		float a0 = bq.b0;
-		float a1 = bq.b1;
-		float a2 = bq.b2;
-		coeffs.d0 = a0;
-		coeffs.d1 = (2.0f * a0 + a1) / coeffs.c1;
+		coeffs.c2 = (1.0f + bq.a1 + bq.a2) / coeffs.c1;
+		coeffs.d0 = bq.b0;
+		coeffs.d1 = (2.0f * bq.b0 + bq.b1) / coeffs.c1;
 		float c1c2 = coeffs.c1 * coeffs.c2;
 		if (c1c2 == 0.0f) return;
-		coeffs.d2 = (a0 + a1 + a2) / c1c2;
+		coeffs.d2 = (bq.b0 + bq.b1 + bq.b2) / c1c2;
 	}
-
+	
 	inline float ProcessSample(float in)
 	{
 		float x = in - z1 - z2;

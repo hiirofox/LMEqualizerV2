@@ -28,11 +28,12 @@ private:
 	static std::complex<float> TransferFunction(const BiquadCoeffs& coeffs, float w)
 	{
 		w *= M_PI;
-		std::complex<float> z{ cosf(w), sinf(w) };
-		std::complex<float> z2 = z * z;
-		std::complex<float> numerator = coeffs.b0 + coeffs.b1 * z + coeffs.b2 * z2;
-		std::complex<float> denominator = 1.0f + coeffs.a1 * z + coeffs.a2 * z2;
-		return numerator / denominator;
+		std::complex<double> z{ cosf(w), sinf(w) };
+		std::complex<double> z2 = z * z;
+		std::complex<double> numerator = (double)coeffs.b0 + (double)coeffs.b1 * z + (double)coeffs.b2 * z2;
+		std::complex<double> denominator = 1.0 + (double)coeffs.a1 * z + (double)coeffs.a2 * z2;
+		auto h = numerator / denominator;
+		return { (float)h.real(),(float)h.imag() };
 	}
 
 

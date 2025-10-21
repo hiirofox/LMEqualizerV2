@@ -11,7 +11,7 @@
 
 //==============================================================================
 LModelAudioProcessorEditor::LModelAudioProcessorEditor(LModelAudioProcessor& p)
-	: AudioProcessorEditor(&p), audioProcessor(p), equi(p.eq)
+	: AudioProcessorEditor(&p), audioProcessor(p), equi(p.eq)//, spectrumUI(std::shared_ptr<Spectrum1d>(&p.analyzer))
 {
 	// Make sure that before the constructor has finished, you've set the
 	// editor's size to whatever you need it to be.
@@ -20,12 +20,13 @@ LModelAudioProcessorEditor::LModelAudioProcessorEditor(LModelAudioProcessor& p)
 	setOpaque(false);  // 允许在边框外面绘制
 
 	//setResizeLimits(64 * 11, 64 * 5, 10000, 10000); // 设置最小宽高为300x200，最大宽高为800x600
-	setSize(64 * 7, 64 * 5);
-	setResizeLimits(64 * 7, 64 * 5, 64 * 13, 64 * 8);
+	setSize(64 * 10, 64 * 5);
+	setResizeLimits(64 * 7, 64 * 4, 64 * 20, 64 * 10);
 
 	//constrainer.setFixedAspectRatio(11.0 / 4.0);  // 设置为16:9比例
 	//setConstrainer(&constrainer);  // 绑定窗口的宽高限制
 
+	//addAndMakeVisible(spectrumUI);
 	addAndMakeVisible(equi);
 
 	startTimerHz(30);
@@ -56,6 +57,7 @@ void LModelAudioProcessorEditor::resized()
 	int x = bound.getX(), y = bound.getY(), w = bound.getWidth(), h = bound.getHeight();
 	auto convXY = juce::Rectangle<int>::leftTopRightBottom;
 
+	//spectrumUI.setBounds(32, 32, w - 64, h - 64);
 	equi.setBounds(32, 32, w - 64, h - 64);
 }
 

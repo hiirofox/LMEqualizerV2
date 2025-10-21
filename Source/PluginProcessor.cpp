@@ -167,7 +167,7 @@ void LModelAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 	float SampleRate = getSampleRate();
 
 	eq.ProcessBlock(recbufl, recbufr, wavbufl, wavbufr, numSamples);
-
+	analyzer.processBlock(recbufl, recbufr, numSamples);
 }
 
 //==============================================================================

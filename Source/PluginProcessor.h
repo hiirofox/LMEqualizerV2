@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "dsp/equalizer.h"
+#include "dsp/spectrum1d.h"
 
 //==============================================================================
 /**
@@ -63,6 +64,7 @@ public:
 	}
 
 	Equalizer eq;
+	Spectrum1d analyzer;
 
 private:
 	//Synth Param

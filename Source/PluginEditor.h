@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include "ui/LM_slider.h"
 #include "ui/equalizerUI.h"
+#include "ui/spectrumUI.h"
 
 //==============================================================================
 /**
@@ -33,6 +34,7 @@ private:
 	LModelAudioProcessor& audioProcessor;
 	
 	EqualizerUI equi;
+	//SpectrumUI spectrumUI;
 
 	juce::ComponentBoundsConstrainer constrainer;  // 用于设置宽高比例
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LModelAudioProcessorEditor)
