@@ -106,7 +106,15 @@ private:
 		a1 = -2.0f * e * cosf(wd);
 		a2 = e * e;
 	}
-
+	static float Q_from_targetPeak(int stages, float Gt_dB)
+	{
+		float Gt = powf(10.0, Gt_dB / 20.0);
+		float A = powf(Gt, 1.0 / stages); // 每级线性增益目标
+		float term = sqrtf(A * A - 1.0);
+		float y = (A * A + A * term) * 0.5; // 选择 '+' 分支
+		float Q = sqrtf(y);
+		return Q;
+	}
 public:
 	BiquadDesigner(float sr = 48000.0f) : sampleRate(sr) {}
 	void SetSampleRate(float sr) { sampleRate = sr; }
@@ -114,21 +122,35 @@ public:
 
 	// ---------------------------------------------------------------------
 	// Matched biquad low-pass  (Vicanek 2016 Eq. 46-47)
+
 	BiquadCoeffs DesignLPF(float cutoff, float stages, float ctofGainDB)
 	{
-		int numStages = stages / 40.0 * 12.0;
+		int numStages = stages / 40.0 * MaxBiquadStages;
 		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
-		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
 
-		if (ctofGainDB < -6.0)
+		float Q, f0;
+		if (ctofGainDB > 0.4)
 		{
-			cutoff *= powf(10.0, (ctofGainDB + 6.0) / 32.0);//经验公式
-			if (cutoff > sampleRate / 2.0) cutoff = sampleRate / 2.0;
-			ctofGainDB = -6.0;
+			float Gt = powf(10.0, ctofGainDB / 20.0);
+			float A = powf(Gt, 1.0 / (numStages + 1)); // 每级线性增益目标
+			float term = sqrtf(A * A - 1.0);
+			float y = (A * A + A * term) * 0.5; // 选择 '+' 分支
+			Q = sqrtf(y);
+			f0 = (cutoff / sampleRate) / sqrtf(1.0f - 1.0f / (2.0f * Q * Q));
 		}
-		float Q = powf(10.0, ctofGainDB / 20.0);//约-6.0dB以下则不能匹配
+		else
+		{
+			if (ctofGainDB > -0.4)ctofGainDB = -0.4;
+			Q = 1.0f / sqrtf(2.0f);
+			float Gt = powf(10.0f, ctofGainDB / 20.0f);
+			float A = powf(Gt, 1.0f / (float)(numStages + 1));
+			float A2 = A * A;
+			float fc = cutoff / sampleRate;
+			float ratio_pow4 = A2 / (1.0f - A2);
+			float ratio = powf(ratio_pow4, 0.25f); // (f0/fc)
+			f0 = fc * ratio;
+		}
 
-		float f0 = cutoff / sampleRate;
 		float a1, a2;
 		computePoles(f0, Q, a1, a2);
 
@@ -160,17 +182,30 @@ public:
 	{
 		int numStages = stages / 40.0 * 12.0;
 		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
-		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
-
-		if (ctofGainDB < -6.0)
+		
+		float Q, f0;
+		if (ctofGainDB > 0.4)
 		{
-			cutoff /= powf(10.0, (ctofGainDB + 6.0) / 32.0);//经验公式
-			if (cutoff > sampleRate / 2.0) cutoff = sampleRate / 2.0;
-			ctofGainDB = -6.0;
+			float Gt = powf(10.0, ctofGainDB / 20.0);
+			float A = powf(Gt, 1.0 / (numStages + 1)); // 每级线性增益目标
+			float term = sqrtf(A * A - 1.0);
+			float y = (A * A + A * term) * 0.5; // 选择 '+' 分支
+			Q = sqrtf(y);
+			f0 = (cutoff / sampleRate) * sqrtf(1.0f - 1.0f / (2.0f * Q * Q));
 		}
-		float Q = powf(10.0, ctofGainDB / 20.0);
+		else
+		{
+			if (ctofGainDB > -0.4)ctofGainDB = -0.4;
+			Q = 1.0f / sqrtf(2.0f);
+			float Gt = powf(10.0f, ctofGainDB / 20.0f);
+			float A = powf(Gt, 1.0f / (float)(numStages + 1));
+			float A2 = A * A;
+			float fc = cutoff / sampleRate;
+			float ratio_pow4 = A2 / (1.0f - A2);
+			float ratio = powf(ratio_pow4, 0.25f); // (f0/fc)
+			f0 = fc / ratio;
+		}
 
-		float f0 = cutoff / sampleRate;
 		float a1, a2;
 		computePoles(f0, Q, a1, a2);
 
