@@ -4,7 +4,7 @@
 #include <math.h>
 #include <utility>
 
-#define MaxBiquadStages 12 //最多12+1个Biquad串联
+#define MaxBiquadStages 24 //最多12+1个Biquad串联
 struct BiquadCoeffs
 {
 	float b0, b1, b2, a1, a2;
@@ -106,15 +106,188 @@ private:
 		a1 = -2.0f * e * cosf(wd);
 		a2 = e * e;
 	}
-	static float Q_from_targetPeak(int stages, float Gt_dB)
+
+
+	BiquadCoeffs DesignHighshelfNoQ(float cutoff, float /*Q*/, float gainDB)
 	{
-		float Gt = powf(10.0, Gt_dB / 20.0);
-		float A = powf(Gt, 1.0 / stages); // 每级线性增益目标
-		float term = sqrtf(A * A - 1.0);
-		float y = (A * A + A * term) * 0.5; // 选择 '+' 分支
-		float Q = sqrtf(y);
-		return Q;
+		BiquadCoeffs coeffs;
+
+		// 1. 从 dB 转换为线性增益
+		double gain = std::pow(10.0f, gainDB / 20.0f);
+		double g;
+
+		// 2. 处理 gain == 1 的特殊情况，以避免计算问题
+		if (std::abs(1.0f - gain) < 1e-6f)
+		{
+			g = 1.00001f; // 论文中的特殊处理
+		}
+		else
+		{
+			g = gain;
+		}
+
+		double fc = cutoff / 2.0 / sampleRate;
+		const double pihalf = M_PI * 0.5f;
+		double invg = 1.0f / g;
+
+		// 3. 计算奈奎斯特频率处的匹配增益 (Eq 10)
+		double fc4 = fc * fc * fc * fc; // pow(fc, 4)
+		double hny = (fc4 + g) / (fc4 + invg);
+
+		// 4. 计算匹配点 f1
+		double f1 = fc / std::sqrt(0.160f + 1.543f * fc * fc);
+		double f14 = f1 * f1 * f1 * f1; // pow(f1, 4)
+		double h1 = (fc4 + f14 * g) / (fc4 + f14 * invg);
+		double phi1 = std::pow(std::sin(pihalf * f1), 2.0f);
+
+		// 5. 计算匹配点 f2
+		double f2 = fc / std::sqrt(0.947f + 3.806f * fc * fc);
+		double f24 = f2 * f2 * f2 * f2; // pow(f2, 4)
+		double h2 = (fc4 + f24 * g) / (fc4 + f24 * invg);
+		double phi2 = std::pow(std::sin(pihalf * f2), 2.0f);
+
+		// 6. 求解线性方程组 (Eq 12, 13)
+		// (注意：论文伪代码A.1中 c11 和 c12 的定义有排版错误，这里根据Eq 13修正)
+		double d1 = (h1 - 1.0f) * (1.0f - phi1);
+		double c11 = -phi1 * d1;
+		double c12 = phi1 * phi1 * (hny - h1);
+
+		double d2 = (h2 - 1.0f) * (1.0f - phi2);
+		double c21 = -phi2 * d2;
+		double c22 = phi2 * phi2 * (hny - h2);
+
+		// 7. 求解 alpha1 (alfal) 和 alpha2 (aa1) (Eq 15)
+		double det = c11 * c22 - c12 * c21;
+
+		double alfal = (c22 * d1 - c12 * d2) / det;
+		double aa1 = (d1 - c11 * alfal) / c12; // alpha2
+
+		// 8. 计算 beta1 (bb1) 和 beta2 (bb2) (Eq 8, 9)
+		// beta1 = alpha1 (alfal)
+		// beta2 = hny * alpha2 (aa1)
+		double bb1 = hny * aa1; // beta2
+
+		// 9. 计算 A2 (aa2) 和 B2 (bb2) (Eq 7)
+		double aa2 = 0.25f * (alfal - aa1); // A2
+		double bb2 = 0.25f * (alfal - bb1); // B2 (使用 beta1 = alfal)
+
+		// 10. 计算 V 和 W (Eq 5)
+		// (A0=1, B0=1, A1=alpha2, B1=beta2)
+		double V = 0.5f * (1.0f + std::sqrt(aa1));
+		double W = 0.5f * (1.0f + std::sqrt(bb1));
+
+		// 11. 计算最终的 biquad 系数 (Eq 5)
+		double a0 = 0.5f * (V + std::sqrt(V * V + aa2));
+		double inva0 = 1.0f / a0;
+
+		coeffs.a1 = (1.0f - V) * inva0;
+		coeffs.a2 = -0.25f * aa2 * inva0 * inva0;
+
+		double b0_unnormalized = 0.5f * (W + std::sqrt(W * W + bb2));
+		coeffs.b0 = b0_unnormalized * inva0;
+		coeffs.b1 = (1.0f - W) * inva0;
+		// 伪代码 b2 的计算方式 (-0.25*bb2/b0)*inva0*inva0 是正确的
+		// b2_un = -0.25*bb2 / b0_un
+		// b2_norm = b2_un * inva0
+		// 伪代码: (-0.25*bb2 / (b0_un*inva0)) * inva0*inva0 = (-0.25*bb2/b0_un) * inva0
+		coeffs.b2 = (-0.25f * bb2 / b0_unnormalized) * inva0;
+
+		return coeffs;
 	}
+
+	/**
+	 * @brief 设计匹配的2阶Butterworth低架滤波器 (2poleShelvingFits A.2)
+	 * @param cutoff 归一化截止频率 (fc / (fs / 2))
+	 * @param gainDB 增益 (dB)
+	 * @return BiquadCoeffs 滤波器系数
+	 */
+	BiquadCoeffs DesignLowshelfNoQ(float cutoff, float /*Q*/, float gainDB)
+	{
+		BiquadCoeffs coeffs;
+
+		// 1. 从 dB 转换为线性增益
+		double gain = std::pow(10.0f, gainDB / 20.0f);
+
+		// 2. 对于 Low-Shelf, g 是增益的倒数 (来自论文第4节和A.2)
+		double g;
+		if (std::abs(1.0f - gain) < 1e-6f)
+		{
+			g = 1.00001f;
+		}
+		else
+		{
+			g = 1.0f / gain; // 关键区别
+		}
+
+		double fc = cutoff * 2.0 / sampleRate;
+		const double pihalf = M_PI * 0.5f;
+		double invg = 1.0f / g; // invg 现在等于 gain
+
+		// 3. 计算奈奎斯特频率处的匹配增益 (Eq 10)
+		double fc4 = fc * fc * fc * fc; // pow(fc, 4)
+		double hny = (fc4 + g) / (fc4 + invg);
+
+		// 4. 计算匹配点 f1
+		double f1 = fc / std::sqrt(0.160f + 1.543f * fc * fc);
+		double f14 = f1 * f1 * f1 * f1; // pow(f1, 4)
+		double h1 = (fc4 + f14 * g) / (fc4 + f14 * invg);
+		double phi1 = std::pow(std::sin(pihalf * f1), 2.0f);
+
+		// 5. 计算匹配点 f2
+		double f2 = fc / std::sqrt(0.947f + 3.806f * fc * fc);
+		double f24 = f2 * f2 * f2 * f2; // pow(f2, 4)
+		double h2 = (fc4 + f24 * g) / (fc4 + f24 * invg);
+		double phi2 = std::pow(std::sin(pihalf * f2), 2.0f);
+
+		// 6. 求解线性方程组 (Eq 12, 13)
+		double d1 = (h1 - 1.0f) * (1.0f - phi1);
+		double c11 = -phi1 * d1;
+		double c12 = phi1 * phi1 * (hny - h1);
+
+		double d2 = (h2 - 1.0f) * (1.0f - phi2);
+		double c21 = -phi2 * d2;
+		double c22 = phi2 * phi2 * (hny - h2);
+
+		// 7. 求解 alpha1 (alfal) 和 alpha2 (aa1) (Eq 15)
+		double det = c11 * c22 - c12 * c21;
+
+		double alfal = (c22 * d1 - c12 * d2) / det;
+		double aa1 = (d1 - c11 * alfal) / c12; // alpha2
+
+		// 8. 计算 beta1 (bb1) 和 beta2 (bb2) (Eq 8, 9)
+		double bb1 = hny * aa1; // beta2
+
+		// 9. 计算 A2 (aa2) 和 B2 (bb2) (Eq 7)
+		double aa2 = 0.25f * (alfal - aa1); // A2
+		double bb2 = 0.25f * (alfal - bb1); // B2
+
+		// 10. 计算 V 和 W (Eq 5)
+		double V = 0.5f * (1.0f + std::sqrt(aa1));
+		double W = 0.5f * (1.0f + std::sqrt(bb1));
+
+		// 11. 计算最终的 biquad 系数 (Eq 5)
+		double a0 = 0.5f * (V + std::sqrt(V * V + aa2));
+		double inva0 = 1.0f / a0;
+
+		// a1 和 a2 的计算与 High-Shelf 相同
+		coeffs.a1 = (1.0f - V) * inva0;
+		coeffs.a2 = -0.25f * aa2 * inva0 * inva0;
+
+		// 关键区别：b 系数需要乘以原始增益 gain (即 1/g 或 invg)
+		// 论文第4节: "...and the bi coefficients scaled by G"
+		// 伪代码A.2中的 `ginva0 = g * inva0` 是一个错误, 应该用 `gain`
+		double b_scale = gain * inva0;
+
+		double b0_unnormalized = 0.5f * (W + std::sqrt(W * W + bb2));
+
+		coeffs.b0 = b0_unnormalized * b_scale;
+		coeffs.b1 = (1.0f - W) * b_scale;
+		coeffs.b2 = (-0.25f * bb2 / b0_unnormalized) * b_scale;
+
+		return coeffs;
+	}
+
+
 public:
 	BiquadDesigner(float sr = 48000.0f) : sampleRate(sr) {}
 	void SetSampleRate(float sr) { sampleRate = sr; }
@@ -180,9 +353,9 @@ public:
 	// Matched biquad high-pass  (Vicanek 2016 Eq. 48-49)
 	BiquadCoeffs DesignHPF(float cutoff, float stages, float ctofGainDB)
 	{
-		int numStages = stages / 40.0 * 12.0;
+		int numStages = stages / 40.0 * MaxBiquadStages;
 		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
-		
+
 		float Q, f0;
 		if (ctofGainDB > 0.4)
 		{
@@ -234,7 +407,7 @@ public:
 	// 带通滤波器
 	BiquadCoeffs DesignBPF(float cutoff, float stages, float ctofGainDB)
 	{
-		int numStages = stages / 40.0 * 12.0;
+		int numStages = stages / 40.0 * MaxBiquadStages;
 		if (numStages >= MaxBiquadStages)numStages = MaxBiquadStages - 1;
 		ctofGainDB = ctofGainDB / (numStages + 1);//每级的增益
 
@@ -266,7 +439,48 @@ public:
 	}
 	BiquadCoeffs DesignTilt(float cutoff, float /*Q*/, float gainDB)
 	{
-		return BiquadCoeffs{ 1,0,0,0,0 };
+		BiquadCoeffs coeffs{ 1,0,0,0,0 };
+		BiquadCoeffs tmp;
+		int n = 12, nCount = 0;
+
+		gainDB /= 4;
+		float B = fabs(gainDB);
+		if (B < 0.2) B = 0.2;
+		float m = pow(B, -(1.0 + B) / (1.0 - B) * 0.375);
+		if (fabs(B - 1.0) < 0.0001) m = expf(2.0);
+		cutoff /= sqrtf(m);
+
+		float mv = 1;
+		for (int i = 0; i < n; ++i)
+		{
+			float f = cutoff * mv;
+			if (f < 5)break;
+			tmp = DesignLowshelfNoQ(f, 1, -gainDB);
+			mv /= m;
+			coeffs.b0s[nCount] = tmp.b0;
+			coeffs.b1s[nCount] = tmp.b1;
+			coeffs.b2s[nCount] = tmp.b2;
+			coeffs.a1s[nCount] = tmp.a1;
+			coeffs.a2s[nCount] = tmp.a2;
+			nCount++;
+		}
+
+		mv = m * 4;
+		for (int i = 0; i < n; ++i)
+		{
+			float f = cutoff * mv;
+			if (f > sampleRate*4)break;
+			tmp = DesignHighshelfNoQ(f, 1, gainDB);
+			mv *= m;
+			coeffs.b0s[nCount] = tmp.b0;
+			coeffs.b1s[nCount] = tmp.b1;
+			coeffs.b2s[nCount] = tmp.b2;
+			coeffs.a1s[nCount] = tmp.a1;
+			coeffs.a2s[nCount] = tmp.a2;
+			nCount++;
+		}
+		coeffs.numStages = nCount;
+		return coeffs;
 	}
 
 	BiquadCoeffs DesignPeaking(float cutoff, float Q, float gainDB)

@@ -506,10 +506,12 @@ private:
 		for (int i = 0; i < numPoints; ++i)
 		{
 			float x = bounds.getX() + i;
-			float freq = positionToFrequency(x, bounds);
+			double freq = positionToFrequency(x, bounds);
 			auto response = equalizer.GetTotalFrequencyResponse(freq);
 			float gainDB = 20.0f * std::log10(std::abs(response));
 			float y = gainToPosition(gainDB, bounds);
+			if (y < 0)y = 0;
+			if (y > getHeight())y = getHeight();
 			if (firstPoint)
 			{
 				responsePath.startNewSubPath(x, y);

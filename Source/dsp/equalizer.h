@@ -33,14 +33,17 @@ private:
 		std::complex<double> z2 = z * z;
 		std::complex<double> numerator = (double)coeffs.b0 + (double)coeffs.b1 * z + (double)coeffs.b2 * z2;
 		std::complex<double> denominator = 1.0 + (double)coeffs.a1 * z + (double)coeffs.a2 * z2;
-		auto h = numerator / denominator;
+		std::complex<double> hnum = numerator;
+		std::complex<double> hden = denominator;
 		for (int i = 0; i < coeffs.numStages; ++i)
 		{
 			numerator = (double)coeffs.b0s[i] + (double)coeffs.b1s[i] * z + (double)coeffs.b2s[i] * z2;
 			denominator = 1.0 + (double)coeffs.a1s[i] * z + (double)coeffs.a2s[i] * z2;
-			h *= numerator / denominator;
+			hnum *= numerator;
+			hden *= denominator;
 		}
-		return { (float)h.real(),(float)h.imag() };
+		hnum = hnum / hden;
+		return { (float)hnum.real(),(float)hnum.imag() };
 	}
 
 
